@@ -1,0 +1,37 @@
+[
+  {
+    "id": 1,
+    "n": "KaBuyo Web Application (Live Hosted on Render)",
+    "u": "https://kabuyo.onrender.com/index.html?fbclid=IwY2xjawVvuNNleHRuA2FlbQIxMABwZG9mBWJyaWQRMTFVOVBDU1lNREVycW5WeXhzcnRjBmFwcF9pZBAyMjIwMzkxNzg4MjAwODkyAAEfoGFgGQPxcKmWm9tBe8iDD6-WQrEBoVwf-_NxyWyvRpb4zj1la4pL8h8rqEU_aem_Omw18D-Km5vE9bPG0_2c1A",
+    "s": "General",
+    "t": "link"
+  },
+  {
+    "id": 2,
+    "n": "KaBuyo PRD - WST & SIA Context",
+    "u": "https://docs.google.com/document/d/1UNaU8BjhKk9IyfQGoLWE3mnrTIqw3FkG1VRyV7fHmiU/edit?tab=t.szsan2jjiips#heading=h.syv5jt9q85t",
+    "s": "SIA",
+    "t": "doc"
+  },
+  {
+    "id": 3,
+    "n": "KaBuyo QA - Tester To-Do Tracker",
+    "u": "https://docs.google.com/spreadsheets/d/1Z_BExJWuvXf3tdD2QiSI1pexEN1AkJJtVIy_FQvdg6Y/edit?usp=sharing",
+    "s": "WST",
+    "t": "sheet"
+  },
+  {
+    "id": 4,
+    "n": "SIA Final Project Guidelines (BatStateU CICS)",
+    "u": "./docs/SIA_Final_Project_Guidelines.pdf",
+    "s": "SIA",
+    "t": "pdf"
+  },
+  {
+    "id": 5,
+    "n": "IT312 SIA Project Study & Documentation Template",
+    "u": "./docs/IT312_SIA_Project_Documentation_Template.pdf",
+    "s": "SIA",
+    "t": "pdf"
+  }
+]

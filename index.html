@@ -1031,6 +1031,9 @@ i{display:inline-flex;font-style:normal}
       <p class="sub">SIA & WST final project links, documents, guidelines, and PDFs.</p>
     </div>
     <div class="header-actions">
+      <button class="theme" id="syncBtn" aria-label="Sync with GitHub" title="Sync / Connect GitHub Token">
+        <i data-i="github"></i>
+      </button>
       <button class="theme" id="theme" aria-label="Toggle light / dark mode" title="Toggle theme">
         <i data-i="theme"></i>
       </button>
@@ -1138,6 +1141,7 @@ const I = {
  copy: ic('<rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>'),
  search: ic('<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>'),
  check: ic('<polyline points="20 6 9 17 4 12"/>'),
+ github: ic('<path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/>'),
  eye: ic('<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>'),
  close: ic('<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>'),
  download: ic('<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>')
@@ -1187,22 +1191,82 @@ const DEFAULT_FILES = [
   }
 ];
 
+const GITHUB_REPO = 'bitancutiepie/Kabuyo-Files-Tracker';
+const GITHUB_TOKEN_KEY = 'kabuyo_gh_token';
+
 let files = [...DEFAULT_FILES];
+
+// Fetch shared files from GitHub repository so all visitors see the latest updates
+async function loadRemoteFiles() {
+  try {
+    const res = await fetch(`files.json?t=${Date.now()}`);
+    if (res.ok) {
+      const data = await res.json();
+      if (Array.isArray(data) && data.length) {
+        files = data;
+        localStorage.setItem(KEY, JSON.stringify(files));
+        render();
+      }
+    }
+  } catch (e) {
+    console.warn('Using local cache:', e);
+  }
+}
+
 try {
   const r = localStorage.getItem(KEY);
-  if (r) {
-    files = JSON.parse(r);
-  } else {
-    // Save defaults
-    localStorage.setItem(KEY, JSON.stringify(DEFAULT_FILES));
+  if (r) files = JSON.parse(r);
+} catch(e) {}
+
+// Commit directly to GitHub files.json via GitHub Contents API
+async function syncToGitHub() {
+  const token = localStorage.getItem(GITHUB_TOKEN_KEY);
+  if (!token) return false;
+  try {
+    toast('Syncing to GitHub...');
+    // 1. Get current file SHA
+    const url = `https://api.github.com/repos/${GITHUB_REPO}/contents/files.json`;
+    const headers = {
+      'Authorization': `Bearer ${token}`,
+      'Accept': 'application/vnd.github.v3+json',
+      'Content-Type': 'application/json'
+    };
+    const getRes = await fetch(url, { headers });
+    let sha = '';
+    if (getRes.ok) {
+      const getData = await getRes.json();
+      sha = getData.sha;
+    }
+    // 2. Put updated files.json
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(files, null, 2))));
+    const putRes = await fetch(url, {
+      method: 'PUT',
+      headers,
+      body: JSON.stringify({
+        message: 'Update project files via web portal',
+        content,
+        sha: sha || undefined
+      })
+    });
+    if (putRes.ok) {
+      toast('Synced to GitHub! Live for all visitors.');
+      return true;
+    } else {
+      const err = await putRes.json();
+      toast('GitHub sync failed: ' + (err.message || 'Check token permissions'));
+      return false;
+    }
+  } catch (e) {
+    console.error(e);
+    toast('Network error syncing to GitHub');
+    return false;
   }
-} catch(e) {
-  console.warn('Storage read error:', e);
 }
 
 const save = () => {
   try {
     localStorage.setItem(KEY, JSON.stringify(files));
+    syncToGitHub();
   } catch(e) {
     console.error('Storage write error:', e);
   }
@@ -1510,8 +1574,26 @@ window.addEventListener('mouseleave', () => {
   glow.style.opacity = '0';
 });
 
-// Initial Render
+// Sync / Token Configuration
+const syncBtn = $('syncBtn');
+syncBtn.onclick = () => {
+  const currentToken = localStorage.getItem(GITHUB_TOKEN_KEY) || '';
+  const token = prompt('Enter your GitHub Personal Access Token (Fine-grained or classic with "repo" permission) to enable live updates for all visitors:', currentToken);
+  if (token !== null) {
+    if (token.trim()) {
+      localStorage.setItem(GITHUB_TOKEN_KEY, token.trim());
+      toast('GitHub Token saved! Syncing...');
+      syncToGitHub();
+    } else {
+      localStorage.removeItem(GITHUB_TOKEN_KEY);
+      toast('GitHub Token removed.');
+    }
+  }
+};
+
+// Initial Render & Remote Sync
 render();
+loadRemoteFiles();
 </script>
 </body>
 </html>
